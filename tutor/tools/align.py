@@ -2,15 +2,15 @@
 """Split a video's transcript by slide, for Claude.
 
 Usage, with the venv's python (tools/.venv; numpy):
-  <python> -I aligner.py <enregistrements folder> <video name> <chapter folder>
-  e.g. aligner.py . s5-1-logique-propositions ../chapitres/s5-1-logique-propositions
+  <python> -I align.py <recordings folder> <video name> <chapter folder>
+  e.g. align.py . s5-1-propositional-logic ../chapters/s5-1-propositional-logic
 
 For videos that show the slide full-frame (4:3, centred). Every 2 s a frame is
 shrunk to 64×48 grey and matched to the nearest slide PNG of the chapter (mean
 absolute difference); runs shorter than 6 s are merged into their neighbour.
 Each Whisper segment (.work/<video>.jsonl) goes to the slide on screen at its
-midpoint. Output: par-diapo/<video>-par-diapo.md, one section per stretch of
-slide, with its time range; a frame far from every slide is « autre » (an
+midpoint. Output: by-slide/<video>-by-slide.md, one section per stretch of
+slide, with its time range; a frame far from every slide is "other" (an
 exercise sheet or a demo on screen).
 """
 import json
@@ -38,7 +38,7 @@ def hms(s):
 def main(rec, stem, chapter):
     rec, chapter = Path(rec).resolve(), Path(chapter).resolve()
     video = rec / "videos" / f"{stem}.mp4"
-    slides = sorted((chapter / "diapositives").glob("[0-9][0-9]-*.png"))
+    slides = sorted((chapter / "slides").glob("[0-9][0-9]-*.png"))
     refs = np.stack([grey(p)[0] for p in slides])
     probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                             "stream=width,height", "-of", "csv=p=0", str(video)], capture_output=True, text=True).stdout
@@ -47,7 +47,7 @@ def main(rec, stem, chapter):
     frames = grey(video, f"fps={1 / STEP},crop={cw}:{vh}:{(vw - cw) // 2}:0")
     d = np.abs(frames[:, None] - refs[None]).mean(axis=(2, 3))
     best, dist = d.argmin(1), d.min(1)
-    labels = [slides[b].name[:2] if dist[k] < FAR else "autre" for k, b in enumerate(best)]
+    labels = [slides[b].name[:2] if dist[k] < FAR else "other" for k, b in enumerate(best)]
     # runs, then merge the short ones into the previous run
     runs = []
     for k, lab in enumerate(labels):
@@ -63,15 +63,15 @@ def main(rec, stem, chapter):
             merged.append(r)
     lines = (rec / ".work" / f"{stem}.jsonl").read_text(encoding="utf-8").splitlines()
     segs = [json.loads(line) for line in lines if line.strip()]
-    out = [f"---\nvidéo: {stem}\nchapitre: {chapter.name}\naudience: Claude uniquement\n"
-           f"méthode: aligner.py (image à l'écran toutes les {STEP:.0f} s, diapo la plus proche) ; "
-           f"transcription Whisper non relue\n---\n"]
+    out = [f"---\nvideo: {stem}\nchapter: {chapter.name}\naudience: Claude only\n"
+           f"method: align.py (the frame on screen every {STEP:.0f} s, nearest slide); "
+           f"Whisper transcript, not proofread\n---\n"]
     for lab, a, b in merged:
         text = " ".join(s["t"].strip() for s in segs if a <= (s["s"] + s["e"]) / 2 < b)
         title = next((p.stem for p in slides if p.name[:2] == lab), lab)
         out.append(f"\n## {title} · {hms(a)}–{hms(b)}\n\n{text}\n")
-    (rec / "par-diapo").mkdir(exist_ok=True)
-    (rec / "par-diapo" / f"{stem}-par-diapo.md").write_text("".join(out), encoding="utf-8")
+    (rec / "by-slide").mkdir(exist_ok=True)
+    (rec / "by-slide" / f"{stem}-by-slide.md").write_text("".join(out), encoding="utf-8")
     print(stem, " ".join(f"{lab}@{hms(a)}" for lab, a, b in merged))
 
 

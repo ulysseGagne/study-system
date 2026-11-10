@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Transcribe a course's recordings, for Claude: videos/ into transcriptions/.
+"""Transcribe a course's recordings, for Claude: videos/ into transcripts/.
 
 Usage, with the venv's python (tools/.venv):
-  <python> -I transcrire.py <enregistrements folder>           every video without a transcript (order
-                                                               below), then rescans, so videos added
-                                                               during the run are picked up
-  <python> -I transcrire.py <enregistrements folder> FILE...   these videos, in this order
+  <python> -I transcribe.py <recordings folder>           every video without a transcript (order
+                                                          below), then rescans, so videos added
+                                                          during the run are picked up
+  <python> -I transcribe.py <recordings folder> FILE...   these videos, in this order
+  --language fr                                           the lectures' language (Whisper detects it
+                                                          when left out)
 
 A transcript has its video's name. Order: by name (dated videos: oldest first;
 `sN-K-…`: by week, then by number), the weekly presentations (`sN-0-…`) last,
-since they mostly repeat the rest. The folder's vocabulaire.txt, if any, primes
+since they mostly repeat the rest. The folder's vocabulary.txt, if any, primes
 Whisper with the course's terms.
 
 Crash-safe: each segment is appended to .work/<video>.jsonl as soon as it is
-decoded, and a rerun resumes after the last saved one. transcriptions/<video>.md
+decoded, and a rerun resumes after the last saved one. transcripts/<video>.md
 is written once the whole video is done; its existence marks the video done.
 """
 import json
@@ -79,12 +81,12 @@ def render(video, segs, duration):
         prev_end = s["e"]
     if cur:
         paras.append(f"[{hms(start)}] " + " ".join(cur))
-    head = (f"---\nvidéo: \"{video.name}\"\ndurée: \"{hms(duration)}\"\n"
-            f"transcription: Whisper {MODEL}, automatique, non relue\naudience: Claude uniquement\n---\n\n")
+    head = (f"---\nvideo: \"{video.name}\"\nduration: \"{hms(duration)}\"\n"
+            f"transcription: Whisper {MODEL}, automatic, not proofread\naudience: Claude only\n---\n\n")
     return head + "\n\n".join(paras) + "\n"
 
 
-def transcribe(model, video, transcripts, work, prompt):
+def transcribe(model, video, transcripts, work, prompt, language):
     out, jsonl = transcripts / f"{video.stem}.md", work / f"{video.stem}.jsonl"
     if out.exists():
         print(f"{video.name}: already transcribed", flush=True)
@@ -98,7 +100,7 @@ def transcribe(model, video, transcripts, work, prompt):
         t0, last_log = time.time(), offset
         # The prompt primes the first window only (condition_on_previous_text is off,
         # to avoid repetition loops over long recordings).
-        pieces, _ = model.transcribe(audio[int(offset * SR):], language="fr", beam_size=5,
+        pieces, _ = model.transcribe(audio[int(offset * SR):], language=language, beam_size=5,
                                      vad_filter=True, condition_on_previous_text=False,
                                      initial_prompt=prompt or None)
         with jsonl.open("a", encoding="utf-8") as f:
@@ -115,23 +117,29 @@ def transcribe(model, video, transcripts, work, prompt):
                     print(f"  {hms(s['e'])} / {hms(duration)} ({speed:.1f}x)", flush=True)
                     last_log = s["e"]
     out.write_text(render(video, segs, duration), encoding="utf-8")
-    print(f"{video.name}: done -> transcriptions/{out.name}", flush=True)
+    print(f"{video.name}: done -> transcripts/{out.name}", flush=True)
 
 
 def main():
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+    language = None
+    if "--language" in args:
+        k = args.index("--language")
+        language = args[k + 1] if k + 1 < len(args) else None
+        del args[k:k + 2]
+    if not args:
         sys.exit(__doc__)
-    rec = Path(sys.argv[1]).resolve()
-    videos_dir, transcripts, work = rec / "videos", rec / "transcriptions", rec / ".work"
+    rec = Path(args[0]).resolve()
+    videos_dir, transcripts, work = rec / "videos", rec / "transcripts", rec / ".work"
     transcripts.mkdir(exist_ok=True)
     work.mkdir(exist_ok=True)
-    vocab = rec / "vocabulaire.txt"
+    vocab = rec / "vocabulary.txt"
     prompt = vocab.read_text(encoding="utf-8").strip() if vocab.exists() else ""
 
     def pending():
         return sorted((v for v in videos_dir.glob("*.mp4") if not (transcripts / f"{v.stem}.md").exists()), key=order)
 
-    explicit = [Path(a).resolve() for a in sys.argv[2:]]
+    explicit = [Path(a).resolve() for a in args[1:]]
     videos = explicit or pending()
     if not videos:
         print("nothing to transcribe", flush=True)
@@ -141,7 +149,7 @@ def main():
     except Exception:
         model = WhisperModel(MODEL, device="cpu", compute_type="int8", cpu_threads=8)
     while videos:
-        transcribe(model, videos[0], transcripts, work, prompt)
+        transcribe(model, videos[0], transcripts, work, prompt, language)
         videos = videos[1:] if explicit else pending()
     print("all done", flush=True)
 

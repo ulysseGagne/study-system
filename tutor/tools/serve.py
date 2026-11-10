@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""The slide server: the course folders at /, the tutor's pages at /tuteur/.
+"""The slide server: the course folders at /, the tutor's pages at /tutor/.
 
 Usage: python3 -I serve.py [--port 8765] [--courses <repo>/courses]
 
 The viewer of a chapter:
-  http://localhost:8765/tuteur/viewer.html?chapitre=<course>/chapitres/<chapter>#<slide>
+  http://localhost:8765/tutor/viewer.html?chapter=<course>/chapters/<chapter>#<slide>
 Listens on 127.0.0.1 only; never serves hidden files (.venv, .work…).
 """
 import argparse
@@ -21,7 +21,7 @@ def handler(courses):
     class Handler(http.server.SimpleHTTPRequestHandler):
         def translate_path(self, path):
             p = posixpath.normpath(urllib.parse.unquote(urllib.parse.urlsplit(path).path))
-            root, rest = (TOOLS, p[len("/tuteur"):]) if p == "/tuteur" or p.startswith("/tuteur/") else (courses, p)
+            root, rest = (TOOLS, p[len("/tutor"):]) if p == "/tutor" or p.startswith("/tutor/") else (courses, p)
             parts = [x for x in rest.split("/") if x and x not in (".", "..")]
             if any(x.startswith(".") for x in parts):
                 return str(TOOLS / "__hidden__")
@@ -51,7 +51,7 @@ def main():
     a = ap.parse_args()
     courses = Path(a.courses).expanduser().resolve()
     with Server(("127.0.0.1", a.port), handler(courses)) as server:
-        print(f"http://localhost:{a.port}/tuteur/viewer.html?chapitre=<course>/chapitres/<chapter> · courses: {courses}",
+        print(f"http://localhost:{a.port}/tutor/viewer.html?chapter=<course>/chapters/<chapter> · courses: {courses}",
               flush=True)
         server.serve_forever()
 

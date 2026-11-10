@@ -5,7 +5,7 @@ How the tutor changes during use. Ulysse built it to study, one remark at a time
 ## The loop
 
 1. **Notice.** Something in a file causes friction, is missing, or turns out wrong: the student corrects a rule, asks for the same thing twice, a rule doesn't fit a case, a tool fails.
-2. **Suggest it in one line**, at a natural break (between slides, after a key, never in the middle of an explanation or a question): « 💡 Prompt : <change> — <why> ».
+2. **Suggest it in one line**, at a natural break (between slides, after a key, never in the middle of an explanation or a question): "💡 Prompt: <change> — <why>".
 3. **Apply it as soon as the student agrees**, or asks for a change themselves: edit the right file at once, in place, at the right section, in as few words as the rule needs, with no date or request tag. Don't hold it for the end of the session, and don't make a new version of the file.
 4. **Never silently**: say in one line what changed and where.
 

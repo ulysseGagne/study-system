@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Feuille de notes · impression</title>
+<title>Note sheet · print</title>
 <!-- Lays out a note sheet in Markdown (?md=/<course>/evaluations/<exam>/<sheet>.md, served by serve.py) on letter pages, three columns, small type.
      Made for IFT-2006's intra (October 2026); the method: preparing-for-an-exam.md, §4.1.
-     Leaves out « Mode d'emploi », the byline and the « → questions » lines. ?pt=6.5 changes the type size.
+     Leaves out the "How to use" section, the byline and the "→ questions" lines. ?pt=6.5 changes the type size.
      The banner (not printed) says how many sides the content fills and how many words fit on two. -->
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <style>
@@ -34,7 +34,7 @@
 </style>
 </head>
 <body>
-<div id="info">Chargement de la feuille…</div>
+<div id="info">Loading the sheet…</div>
 <div class="page" id="sheet"></div>
 <script>
 (async () => {
@@ -43,8 +43,8 @@
   const src = new URLSearchParams(location.search).get('md');
   let md = await (await fetch(src, {cache: 'no-store'})).text();
   md = md.replace(/^---[\s\S]*?\n---\n/, '');                       // front matter
-  md = md.replace(/^> Copie Markdown[^\n]*\n/m, '');                  // note about the snapshot
-  md = md.replace(/^## Mode d'emploi[\s\S]*?(?=^## )/m, '');          // instructions for the review day
+  md = md.replace(/^> (Markdown copy|Copie Markdown)[^\n]*\n/m, '');                  // note about the snapshot
+  md = md.replace(/^## (How to use|Mode d'emploi)[\s\S]*?(?=^## )/m, '');          // instructions for the review day
   md = md.replace(/^[A-Z][a-z]{2} \d{1,2}, \d{4} · @[^\n]*\n/m, '');  // byline
   md = md.replace(/^→[^\n]*\n/gm, '');                                // question lists
   const sheet = document.getElementById('sheet');
@@ -81,10 +81,10 @@
   }
   const printed = document.querySelectorAll('.ppage').length;
   document.getElementById('info').textContent =
-    `${getComputedStyle(sheet).fontSize} · ${words} mots · ${sides.toFixed(2)} faces · ` +
-    `deux faces tiennent environ ${fits} mots · contenu = ${(sides / 2).toFixed(2)} × la feuille · ` +
-    `impression : ${printed} page${printed > 1 ? 's' : ''}${printed > 2 ? ' (trop : couper avant d\'imprimer)' : ' (OK : Cmd+P, recto-verso)'}`;
-  window.__mesure = {words, columns, sides, fits, printed};
+    `${getComputedStyle(sheet).fontSize} · ${words} words · ${sides.toFixed(2)} sides · ` +
+    `two sides hold about ${fits} words · content = ${(sides / 2).toFixed(2)} × the sheet · ` +
+    `print: ${printed} page${printed > 1 ? 's' : ''}${printed > 2 ? ' (too many: cut before printing)' : ' (OK: Cmd+P, double-sided)'}`;
+  window.__measure = {words, columns, sides, fits, printed};
 })();
 </script>
 </body>

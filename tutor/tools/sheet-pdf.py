@@ -1,6 +1,6 @@
 """An exam sheet in Markdown -> one letter page, one side (HTML, PDF and a PNG preview, next to it).
 
-Usage: python3 -I feuille-pdf.py <sheet.md> [--pt 8.5]
+Usage: python3 -I sheet-pdf.py <sheet.md> [--pt 8.5]
 Renders the .md as Obsidian does (a line break = a line; a blank line = a small gap), in three
 columns, in Obsidian's font. Without --pt, the font is the largest (in steps of 0.1 pt) whose PDF
 fits on one page. `<file.svg>` alone on a line inserts the drawing; `<file.png>`, the image.
@@ -66,19 +66,19 @@ while i < len(lines):
         blk.append(f'<img src="{(src.parent / m[1]).as_uri()}">')
     else:
         tabs = len(ln) - len(ln.lstrip("\t"))
-        sub = " sub" if re.fullmatch(r"\*\*[^*]+\*\*", ln) and ln == ln.upper() and not ln.endswith(":**") else ""  # **SOUS-TITRE**
+        sub = " sub" if re.fullmatch(r"\*\*[^*]+\*\*", ln) and ln == ln.upper() and not ln.endswith(":**") else ""  # **SUBTITLE**
         blk.append(f'<div class="l{sub}" style="padding-left:{tabs * 1.2}em">{inline(ln.lstrip(chr(9)))}</div>')
     i += 1
 flush()
 
 CSS = """
-@font-face { font-family: "Symboles"; src: url("file:///System/Library/Fonts/Supplemental/STIXTwoMath.otf"), local("STIX Two Math"); unicode-range: U+2200, U+2203, U+2209, U+21D4; }
+@font-face { font-family: "Symbols"; src: url("file:///System/Library/Fonts/Supplemental/STIXTwoMath.otf"), local("STIX Two Math"); unicode-range: U+2200, U+2203, U+2209, U+21D4; }
 @page { size: letter; margin: 0.25in; }
 @media screen { .page { width: 8in; } }
 * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
 html, body { margin: 0; background: #fff; color: #000; }
 .page { columns: 3; column-gap: 0.12in; column-rule: 0.4pt solid #aaa; column-fill: auto;
-  font-family: "Symboles", ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; line-height: 1.2;
+  font-family: "Symbols", ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; line-height: 1.2;
   letter-spacing: -0.01em; }
 b { font-weight: 600; }
 h3 { font-size: 1em; font-weight: 600; background: #000; color: #fff; margin: 3pt 0 1.5pt;
@@ -94,7 +94,7 @@ th, td { border: 0.4pt solid #777; padding: 0.4pt 1.5pt; vertical-align: top; te
 img { width: 100%; display: block; }
 """
 
-# rapport des coupures : pour chaque ligne qui passe à la ligne, son nombre de lignes et le remplissage de la dernière
+# the wraps report: for each line that wraps, its number of lines and how full its last one is
 REPORT = """<script>
 const rep = [];
 for (const el of document.querySelectorAll('.l, h3')) {
@@ -119,7 +119,7 @@ chrome = [CHROME, "--headless", "--disable-gpu", "--allow-file-access-from-files
 
 
 def page(pt, script=""):
-    return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
+    return f"""<!doctype html><html><head><meta charset="utf-8">
 <title>{html.escape(src.stem)}</title><style>{CSS}</style></head>
 <body><div class="page" style="font-size:{pt}pt">{"".join(body)}</div>{script}</body></html>"""
 
@@ -132,7 +132,7 @@ def render(pt):
 
 if fixed:
     pt, n = fixed, render(fixed)
-else:  # dichotomie sur une grille de 0,1 pt
+else:  # a binary search on a 0.1 pt grid
     lo, hi = 50, 110
     while lo < hi:
         mid = (lo + hi + 1) // 2
@@ -140,12 +140,12 @@ else:  # dichotomie sur une grille de 0,1 pt
     pt = lo / 10
     n = render(pt)
 subprocess.run(["qlmanage", "-t", "-s", "1700", "-o", str(src.parent), str(out_pdf)], check=True, capture_output=True)
-Path(f"{out_pdf}.png").replace(f"{out}-apercu.png")
+Path(f"{out_pdf}.png").replace(f"{out}-preview.png")
 print(f"{pt} pt · {n} page(s)")
 
-tmp = out.with_name(out.name + "-rapport.html")
+tmp = out.with_name(out.name + "-report.html")
 tmp.write_text(page(pt, REPORT), encoding="utf-8")
 dom = subprocess.run(chrome + ["--window-size=900,900", "--dump-dom", tmp.as_uri()], capture_output=True, text=True).stdout
 tmp.unlink()
 for nl, fill, txt in json.loads(html.unescape(re.search(r'<pre id="rep">(.*?)</pre>', dom, re.S)[1])):
-    print(f"  {nl} lignes, dernière à {fill:3d} % · {txt[:70]}")
+    print(f"  {nl} lines, the last {fill:3d}% full · {txt[:70]}")

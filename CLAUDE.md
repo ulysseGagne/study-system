@@ -5,7 +5,7 @@ A Socratic tutor that teaches the student's own courses with Claude Code, built 
 ## Where to start
 
 1. **The welcome isn't done** (`where-to-resume.md` says so): follow `tutor/welcome.md`, from the step it names.
-2. **Otherwise,** as soon as the student wants to study (« salut », « on étudie <cours> »): `tutor/starting-a-session.md`.
+2. **Otherwise,** as soon as the student wants to study ("hi", "let's study <course>", in any language): `tutor/starting-a-session.md`.
 3. **Anything else:** help directly.
 
 ## Rules for every session

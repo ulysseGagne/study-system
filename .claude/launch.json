@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "diapositives",
+      "name": "slides",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-I", "tutor/tools/serve.py", "--port", "8765"],
       "port": 8765
