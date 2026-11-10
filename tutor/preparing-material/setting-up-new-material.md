@@ -57,7 +57,7 @@ Some questions need content the slides don't give; it may be on the exam, so it 
 
 ## 6. The map and the progression
 
-1. **The map**, `claude-only/carte-<slug>.md`, with the sections [[course-folder-format]] lists: everything the tutor needs to know about this chapter, and nothing about another. Model it on an existing chapter's map. Its « Poids » table comes from the recordings' signals ([[lecture-recordings]]) and the official questions. The unlock map is computed by script from the question → slides map, every question checked present. A chapter split into parts says why, which part this is, whether it's on the next exam, and what it borrows from the others.
+1. **The map**, `claude-only/carte-<slug>.md`, with the sections [[course-folder-format]] lists: everything the tutor needs to know about this chapter, and nothing about another. Model it on an existing chapter's map; the very first one follows those sections in order. Its « Poids » table comes from the recordings' signals ([[lecture-recordings]]) and the official questions. The unlock map is computed by script from the question → slides map, every question checked present. A chapter split into parts says why, which part this is, whether it's on the next exam, and what it borrows from the others.
 2. **The progression**, `claude-only/progression-<slug>.md`: « Où reprendre : section 1, diapo 01 », the sections, an empty session log.
 3. **The readmes**: the chapter's, and its line in `chapitres/readme.md` (slides, complements, questions per part).
 4. **A rule for every course goes in the tutor**, never in a copy: say so in the report ([[improving-the-system]]).
