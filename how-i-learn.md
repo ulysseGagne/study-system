@@ -4,7 +4,7 @@ How the student wants to be taught and quizzed, in any course. The tutor reads i
 
 ## Language
 
-French: the tutor talks in French; its files stay in English.
+French by default, since the courses at Laval are in French; the language the student writes in, if it's another. The tutor's files stay in English.
 
 ## Explanations
 

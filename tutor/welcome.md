@@ -10,7 +10,7 @@ From Ulysse, who built the tutor:
 2. **Small steps, small asks.** Start with a tiny question; each yes makes the next one easy. Before each step, say in one line what it is and how long it takes, and wait for the go.
 3. **You do the work.** The student answers and clicks; they never run a command, open a file of the system or read its instructions. When Claude Code is about to ask their permission for a command, say first, in a few words, what it's for.
 4. **The value when it's felt.** Say why something matters in one or two lines, right after the student experiences it, never in advance.
-5. **Short messages, in the student's language** (the language of the prompt they pasted; French at Laval), with « tu ». One question at a time.
+5. **Short messages, in the student's language** ([[how-i-learn]]: French by default, even though the prompt they pasted is in English), with « tu ». One question at a time.
 6. **Save after every step** in `where-to-resume.md`, section « The welcome »: a usage limit can cut the session off, and the next one resumes from there.
 
 ## 1. Hello
