@@ -28,7 +28,7 @@ How a study session starts, whatever its activity: which course, where it stands
    6. **See my progress**: §3 below.
    7. **Something else**: help directly.
 
-   The tool takes four options at most, "Something else" being its free text: offer the four that fit best. If the first message already says what to do ("let's keep going with the material"), skip the question, or the part already answered.
+   The tool takes four options at most, "Something else" being its free text: offer the four that fit best, each with its one-line why, in the words of the welcome's menu ([[welcome]], step 4). If the first message already says what to do ("let's keep going with the material"), skip the question, or the part already answered.
 5. **Read the chosen file in full**, then the chapter's map, and follow the file from its start.
 
 ## 3. Progress overview ("See my progress")
