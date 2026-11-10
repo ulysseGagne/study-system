@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diapositives</title>
+<!-- The slide viewer of every chapter. ?chapitre=<course>/chapitres/<chapter> picks the chapter; #<slide> the slide.
+     Reads the chapter's diapositives/diapositives.json; served by serve.py. Claude moves it through the hash and reads
+     window.currentSlide; the student uses ← → (↑ ↓ work too), the buttons or the menu. -->
+<!-- The look: the design system of ulyssegagne.com. Each thing said once: the bar names the slide by its own number, out of the
+     last one, and that number opens the menu; the title stays on the slide. -->
+<style>
+:root{--bg:#fff;--text:#222;--muted:#5c5c5c;--line:#e0e0e0;--accent:#0066cc;--mark:rgba(255,208,0,.4);--hover:rgba(0,0,0,.06);--radius:4px;
+ --shadow:0 6px 24px rgba(0,0,0,.09),0 1px 4px rgba(0,0,0,.05);
+ --font:ui-sans-serif,-apple-system,BlinkMacSystemFont,system-ui,'Segoe UI',Roboto,sans-serif;
+ --fold:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23222222' d='M3.2 4.5h9.6a.9.9 0 0 1 .77 1.37l-4.8 7.9a.9.9 0 0 1-1.54 0l-4.8-7.9A.9.9 0 0 1 3.2 4.5z'/%3E%3C/svg%3E");
+ color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(0,102,204,.22)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;align-items:center;gap:4px;padding:0 16px;height:52px;border-bottom:1px solid var(--line)}
+#where{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+#menu{position:relative;flex:none;display:flex;align-items:center;gap:6px;padding:2px 6px;margin-left:-6px;border-radius:var(--radius)}
+#menu:hover{background:var(--hover)}
+#menu:has(#jump:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+#label{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+#tri{flex:none;width:10px;height:10px;background:var(--fold) center/10px no-repeat}
+#jump{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font:inherit}
+.badge{display:none;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:20px;padding:1px 8px;border-radius:var(--radius);background:var(--mark)}
+button{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-size:17px;line-height:1;color:var(--text);background:transparent;border:0;border-radius:var(--radius);padding:0;margin:0;cursor:pointer}
+button:hover{background:var(--hover)}
+main{position:relative;height:calc(100% - 52px);display:flex;align-items:center;justify-content:center;padding:28px}
+img{display:block;max-width:100%;max-height:100%;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
+#error{display:none;max-width:560px;text-align:center;color:var(--muted)}
+.failed #tri,.failed #jump{display:none}
+</style></head><body>
+<header><span id="where"><span id="menu"><span id="label">Chargement…</span><span id="tri" aria-hidden="true"></span><select id="jump" aria-label="Aller à la diapo"></select></span><span id="badge" class="badge"></span></span>
+<button id="prev" title="Diapo précédente (←)" aria-label="Diapo précédente">←</button><button id="next" title="Diapo suivante (→)" aria-label="Diapo suivante">→</button></header>
+<main><img id="slide" alt=""><p id="error"></p></main>
+<script>
+const $=id=>document.getElementById(id);
+const chapter=(new URLSearchParams(location.search).get('chapitre')||'').replace(/^\/+|\/+$/g,'');
+const base='/'+chapter.split('/').map(encodeURIComponent).join('/')+'/diapositives/';
+const num=id=>String(id).replace(/^0+(?=\d)/,''); // « 07 » reads « 7 »; the id itself never changes
+let S=[],i=0,last='';
+function fail(msg){document.body.classList.add('failed');$('label').textContent='Diapositives';$('slide').style.display='none';$('error').style.display='block';$('error').textContent=msg}
+function show(k,write){if(!S.length)return;i=Math.max(0,Math.min(S.length-1,k));const s=S[i];
+ $('slide').src=base+encodeURIComponent(s.file);$('slide').alt='Diapo '+s.id+' : '+s.title;
+ $('label').textContent='Diapo '+num(s.id)+last;$('jump').value=i;
+ const b=$('badge');b.style.display='none';
+ if(s.kind==='complement'){b.textContent='Complément · non officiel';b.style.display='inline'}
+ document.title='Diapo '+s.id+' — '+s.title;window.currentSlide=s.id;
+ if(write!==false&&location.hash!=='#'+s.id)history.replaceState(null,'','#'+s.id);}
+function fromHash(){const h=decodeURIComponent(location.hash.slice(1));const k=S.findIndex(s=>s.id===h);show(k<0?0:k,false)}
+window.addEventListener('hashchange',fromHash);
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;
+ if(['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(i+1)}
+ else if(['ArrowUp','ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(i-1)}
+ else if(e.key==='Home')show(0);else if(e.key==='End')show(S.length-1)});
+$('prev').onclick=()=>show(i-1);$('next').onclick=()=>show(i+1);$('jump').onchange=e=>{show(+e.target.value);e.target.blur()};
+if(!chapter){fail('Aucun chapitre : ajoute ?chapitre=<cours>/chapitres/<chapitre> à l\'adresse.')}
+else fetch(base+'diapositives.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{
+ S=d.diapositives;
+ const n=S.length?parseInt(S[S.length-1].id,10):NaN;last=Number.isFinite(n)?' sur '+n:'';
+ S.forEach((s,k)=>{const o=document.createElement('option');o.value=k;o.textContent=num(s.id)+' · '+s.title;$('jump').appendChild(o)});
+ fromHash();
+}).catch(()=>fail('Pas de liste de diapos pour '+chapter+' (diapositives/diapositives.json).'));
+</script></body></html>

@@ -1,0 +1,6 @@
+# The student's courses stay on this Mac.
+courses/
+tutor/tools/.venv/
+__pycache__/
+.DS_Store
+.claude/settings.local.json
